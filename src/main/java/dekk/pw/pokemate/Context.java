@@ -11,6 +11,7 @@ import com.pokegoapi.auth.PtcCredentialProvider;
 import com.pokegoapi.util.SystemTimeImpl;
 import okhttp3.OkHttpClient;
 
+import java.io.File;
 import java.security.MessageDigest;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
