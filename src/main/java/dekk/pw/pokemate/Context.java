@@ -7,6 +7,8 @@ import com.pokegoapi.api.pokemon.Pokemon;
 import com.pokegoapi.auth.*;
 
 import com.pokegoapi.util.SystemTimeImpl;
+import com.sun.corba.se.impl.orbutil.concurrent.Mutex;
+import dekk.pw.pokemate.util.Time;
 import okhttp3.OkHttpClient;
 
 import javax.swing.*;
@@ -27,7 +29,6 @@ import java.security.MessageDigest;
  */
 public class Context {
     private OkHttpClient http;
-    private int RetryLimit;
     private PokemonGo api;
     private AtomicDouble lat = new AtomicDouble();
     private AtomicDouble lng = new AtomicDouble();
@@ -35,7 +36,9 @@ public class Context {
     private AtomicBoolean walking = new AtomicBoolean(false);
     private CredentialProvider credentialProvider;
     private static SystemTimeImpl time = new SystemTimeImpl();
-
+    private int MinimumAPIWaitTime = 4000;
+    public Mutex APILock = new Mutex();
+    private boolean runStatus;
 
     public Context(PokemonGo go, PlayerProfile profile, boolean walking, CredentialProvider credentialProvider, OkHttpClient http) {
         this.api = go;
@@ -43,8 +46,7 @@ public class Context {
         this.walking.set(walking);
         this.credentialProvider = credentialProvider;
         this.http = http;
-        this.RetryLimit=5;
-
+        this.runStatus = true;
     }
 
     public static CredentialProvider Login(OkHttpClient httpClient) {
@@ -129,9 +131,9 @@ public class Context {
         this.http = http;
     }
 
-    public PokemonGo getApi() {
-        return api;
-    }
+    public PokemonGo getApi() { return api; }
+
+    public int getMinimumAPIWaitTime() { return MinimumAPIWaitTime; }
 
     public void setApi(PokemonGo api) {
         this.api = api;
@@ -153,9 +155,7 @@ public class Context {
         return walking;
     }
 
-    public int getRetryLimit() {
-        return RetryLimit;
-    }
+    public boolean getRunStatus() { return runStatus; }
 
     public CredentialProvider getCredentialProvider() {
         return credentialProvider;

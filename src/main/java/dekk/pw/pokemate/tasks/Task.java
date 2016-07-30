@@ -10,6 +10,9 @@ import java.util.concurrent.Callable;
  */
 public abstract class Task implements Runnable {
 
+    protected static long APIStartTime;
+    protected static long APIElapsedTime;
+
     protected final Context context;
 
     Task(final Context context) {

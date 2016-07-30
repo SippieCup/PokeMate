@@ -13,6 +13,7 @@ import dekk.pw.pokemate.Walking;
 import java.util.ArrayList;
 
 import static dekk.pw.pokemate.util.StringConverter.convertItemAwards;
+import static dekk.pw.pokemate.util.Time.sleep;
 
 /**
  * Created by TimD on 7/21/2016.
@@ -21,27 +22,44 @@ public class TagPokestop extends Task implements Runnable{
 
     private static final int retryAmount = 50;
 
-    TagPokestop(final Context context) {
+    public TagPokestop(final Context context) {
         super(context);
     }
 
     @Override
     public void run() {
-        try {
-            MapObjects map = context.getApi().getMap().getMapObjects();
-            ArrayList<Pokestop> pokestops = new ArrayList<>(map.getPokestops());
-            if (pokestops.size() == 0) {
-                return;
-            }
+        while(context.getRunStatus()) {
+            try {
+                context.APILock.attempt(1000);
+                APIStartTime = System.currentTimeMillis();
+                MapObjects map = context.getApi().getMap().getMapObjects();
+                APIElapsedTime = System.currentTimeMillis() - APIStartTime;
+                if (APIElapsedTime < context.getMinimumAPIWaitTime()) {
+                    sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
+                }
+                context.APILock.release();
 
-            pokestops.stream()
+                ArrayList<Pokestop> pokestops = new ArrayList<>(map.getPokestops());
+                if (pokestops.size() == 0) {
+                    return;
+                }
+
+                pokestops.stream()
                     .filter(Pokestop::canLoot)
                     .forEach(near -> {
                         Walking.setLocation(context);
                         try {
                              /* Softban Bypass */
                             PokestopLootResult result;
+                            context.APILock.attempt(1000);
+                            APIStartTime = System.currentTimeMillis();
                             result = near.loot();
+                            APIElapsedTime = System.currentTimeMillis() - APIStartTime;
+                            if (APIElapsedTime < context.getMinimumAPIWaitTime()) {
+                                sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
+                            }
+                            context.APILock.release();
+
                             PokeMateUI.toast(resultMessage(result), Config.POKE + "Stop interaction!", "icons/pokestop.png");
                             switch (result.getResult()) {
                                 case SUCCESS:
@@ -50,8 +68,10 @@ public class TagPokestop extends Task implements Runnable{
 
                                         context.getWalking().set(false);
                                         PokeMateUI.toast("Softbanned! Bypassing..", Config.POKE + "Stop interaction!", "icons/pokestop.png");
-                                        for (int i = 0; i<retryAmount; i++) {
+                                        for (int i = 0; i < retryAmount; i++) {
+
                                             result = near.loot();
+
                                             if (result.getExperience() > 0) {
                                                 PokeMateUI.toast("No longer softbanned", Config.POKE + "Stop interaction!", "icons/pokestop.png");
                                                 break;
@@ -62,11 +82,20 @@ public class TagPokestop extends Task implements Runnable{
                                     break;
                             }
                         } catch (LoginFailedException | RemoteServerException e) {
+                            System.out.println("[Tag Pokestop] Hit Rate Limited");
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            System.out.println("[Tag Pokestop] Error - Timed out waiting for API");
                             e.printStackTrace();
                         }
                     });
-        } catch (LoginFailedException | RemoteServerException e) {
-            e.printStackTrace();
+            } catch (LoginFailedException | RemoteServerException e) {
+                System.out.println("[Tag PokeStop] Hit Rate Limited");
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                System.out.println("[Tag PokeStop] Error - Timed out waiting for API");
+                // e.printStackTrace();
+            }
         }
     }
 
