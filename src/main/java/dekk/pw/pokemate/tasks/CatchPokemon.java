@@ -36,7 +36,6 @@ public class CatchPokemon extends Task implements Runnable {
     @Override
     public void run() {
         while(context.getRunStatus()) {
-            System.out.println("[CatchPokemon] Active");
             try {
                 Pokeball pokeball = null;
                 context.APILock.attempt(1000);
@@ -113,7 +112,6 @@ public class CatchPokemon extends Task implements Runnable {
                 System.out.println("[CatchPokemon] Error - TImed out waiting for API");
                 // e.printStackTrace();
             }
-            System.out.println("[CatchPokemon] Loop Ended");
         }
     }
 

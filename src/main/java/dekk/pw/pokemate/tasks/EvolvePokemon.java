@@ -44,11 +44,7 @@ public class EvolvePokemon extends Task implements Runnable {
 
     @Override
     public void run() {
-        int i=0;
-        System.out.println("[Evolve] Activating..");
         while(context.getRunStatus()) {
-            if (i==10) { System.out.println("[Evolve] Active"); i=0; }
-            i++;
             try {
                 context.APILock.attempt(1000);
                 APIStartTime = System.currentTimeMillis();
