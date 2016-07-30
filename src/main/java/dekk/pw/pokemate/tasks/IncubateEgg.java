@@ -7,6 +7,7 @@ import com.pokegoapi.exceptions.LoginFailedException;
 import com.pokegoapi.exceptions.RemoteServerException;
 import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.PokeMateUI;
+import dekk.pw.pokemate.util.Time;
 import javafx.scene.image.Image;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Created by $ Tim Dekker on 7/23/2016.
  */
-public class IncubateEgg extends Task {
+public class IncubateEgg extends Task implements Runnable {
 
     IncubateEgg(final Context context) {
         super(context);
@@ -23,6 +24,7 @@ public class IncubateEgg extends Task {
 
     @Override
     public void run() {
+        Time.sleepRate();
         try {
             List<EggIncubator> incubators = context.getApi().getInventories().getIncubators().stream().filter(i -> !i.isInUse()).collect(Collectors.toList());
             List<EggPokemon> eggs = context.getApi().getInventories().getHatchery().getEggs().stream().filter(egg -> egg.getEggIncubatorId() == null || egg.getEggIncubatorId().isEmpty()).collect(Collectors.toList());

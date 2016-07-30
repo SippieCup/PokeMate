@@ -9,6 +9,7 @@ import com.pokegoapi.api.map.fort.Pokestop;
 import dekk.pw.pokemate.Config;
 import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.Walking;
+import dekk.pw.pokemate.util.Time;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,7 +20,7 @@ import java.util.stream.Stream;
  * Created by TimD on 7/21/2016.
  * Credit: https://github.com/mjmfighter/pokemon-go-bot/blob/master/src/main/java/com/mjmfighter/pogobot/LocationWalker.java
  */
-public class Navigate extends Task {
+public class Navigate extends Task implements Runnable {
 
     private final LatLng min, max;
     private static List<DirectionsStep[]> routes = new ArrayList<>();
@@ -98,9 +99,7 @@ public class Navigate extends Task {
     public void run() {
         if (context.isWalking()) {
             return;
-        } else if (navigationType.equals(NavigationType.STREETS) && routesIndex >= getDirections().size()) {
-            routesIndex = 0;
-        } else if (navigationType.equals(NavigationType.POKESTOPS) && routesIndex >= route.size()) {
+        } else if (navigationType == NavigationType.STREETS && routesIndex >= getDirections().size() || routesIndex >= route.size()) {
             routesIndex = 0;
         }
         switch (navigationType) {

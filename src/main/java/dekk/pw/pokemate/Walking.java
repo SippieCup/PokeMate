@@ -4,6 +4,7 @@ import com.google.common.geometry.S2LatLng;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.maps.model.DirectionsStep;
 import com.pokegoapi.util.Log;
+import dekk.pw.pokemate.util.Time;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,7 +49,7 @@ public class Walking {
                 context.getApi().setLocation(context.getLat().addAndGet(deltaLat), context.getLng().addAndGet(deltaLng), 0);
                 stepsRequired.getAndAdd(-1);
                 if (stepsRequired.get() <= 0) {
-                    System.out.println("Destination reached.");
+                    //System.out.println("Destination reached.");
                     context.getWalking().set(false);
                     cancel();
                 }

@@ -183,6 +183,7 @@ public class PokeMateUI extends Application implements MapComponentInitializedLi
                                     step.polyline.decodePath().forEach(a -> locs.add(new LatLong(a.lat, a.lng)));
                                 }
                             }
+
                             LatLong[] array = locs.toArray(new LatLong[0]);
                             MVCArray mvc = new MVCArray(array);
 

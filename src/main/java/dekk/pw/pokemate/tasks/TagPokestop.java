@@ -17,7 +17,7 @@ import java.util.ArrayList;
 /**
  * Created by TimD on 7/21/2016.
  */
-public class TagPokestop extends Task {
+public class TagPokestop extends Task implements Runnable{
 
     private static final int retryAmount = 50;
 

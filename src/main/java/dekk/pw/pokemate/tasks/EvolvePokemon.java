@@ -8,6 +8,7 @@ import dekk.pw.pokemate.Config;
 import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.PokeMateUI;
 import dekk.pw.pokemate.util.StringConverter;
+import dekk.pw.pokemate.util.Time;
 import javafx.scene.image.Image;
 
 import java.io.DataInputStream;
@@ -19,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Created by TimD on 7/22/2016.
  */
-public class EvolvePokemon extends Task {
+public class EvolvePokemon extends Task implements Runnable {
     private static final ConcurrentHashMap<Integer, Integer> CANDY_AMOUNTS = new ConcurrentHashMap<>();
 
     static {
@@ -42,6 +43,7 @@ public class EvolvePokemon extends Task {
 
     @Override
     public void run() {
+        Time.sleepRate();
         try {
             CopyOnWriteArrayList<Pokemon> pokeList = new CopyOnWriteArrayList<>(context.getApi().getInventories().getPokebank().getPokemons());
             for (Pokemon pokemon : pokeList)

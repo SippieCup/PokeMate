@@ -12,7 +12,7 @@ import java.text.DecimalFormat;
 /**
  * Created by TimD on 7/22/2016.
  */
-public class Update extends Task {
+public class Update extends Task implements Runnable{
 
     private static final int[] REQUIRED_EXPERIENCES = new int[]{0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 65000, 75000,
             85000, 100000, 120000, 140000, 160000, 185000, 210000, 260000, 335000, 435000, 560000, 710000, 900000, 1100000,
@@ -34,23 +34,13 @@ public class Update extends Task {
             context.setProfile(player = context.getApi().getPlayerProfile());
             player.updateProfile();
             context.getApi().getInventories().updateInventories(true);
-            long curTotalXP = player.getStats().getExperience();
-            if (curTotalXP > lastExperience) {
-                if (lastExperience != 0) {
-                    experienceGained += curTotalXP - lastExperience;
-                }
-                lastExperience = curTotalXP;
-            }
-            long runTime = System.currentTimeMillis() - PokeMate.startTime;
-        } catch (LoginFailedException | RemoteServerException e) {
-            e.printStackTrace();
-            System.out.println("Attempting to Login");
+
+        } catch (LoginFailedException e) {
+            //e.printStackTrace();
+            System.out.println("[Update] Login Failed, attempting to login again.");
             Context.Login(context.getHttp());
+        } catch (RemoteServerException e) {
+            System.out.println("[Update] Error - Hit Rate limiter.");
         }
     }
-	
-	public static String getXpHr() {
-		return String.format("%.2f", xpHr);
-	}
-
 }

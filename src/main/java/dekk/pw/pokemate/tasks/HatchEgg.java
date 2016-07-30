@@ -19,20 +19,28 @@ class HatchEgg extends Task {
     @Override
     public void run() {
         try {
+            Time.sleepRate();
+            System.out.println("[HatchEgg] Querying for Hatched Eggs");
             List<HatchedEgg> eggs = context.getApi().getInventories().getHatchery().queryHatchedEggs();
             Time.sleepRate();
             eggs.forEach(egg -> {
                 Pokemon hatchedPokemon = context.getApi().getInventories().getPokebank().getPokemonById(egg.getId());
                 String details = String.format("candy: %s  exp: %s  stardust: %s", egg.getCandy(), egg.getExperience(), egg.getStardust());
                 if (hatchedPokemon == null) {
-                    PokeMateUI.toast("Hatched egg " + egg.getId() + " " + details, "Hatched egg!","icons/items/egg.png");
+                    PokeMateUI.toast("Hatched egg " + egg.getId() + " " + details, "Hatched egg!", "icons/items/egg.png");
                 } else {
                     PokeMateUI.toast("Hatched " + hatchedPokemon.getPokemonId() + " with " + hatchedPokemon.getCp() + " CP " + " - " + details,
                             "Hatched egg!",
                             "icons/items/egg.png");
                 }
+                Time.sleepRate();
             });
-        } catch (LoginFailedException | RemoteServerException e) {
+        } catch (LoginFailedException e) {
+            e.printStackTrace();
+        } catch (RemoteServerException e) {
+            System.out.println("[HatchEgg] Hit rate limit");
+            //e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat;
 /**
  * Created by TimD on 7/21/2016.
  */
-public class ReleasePokemon extends Task {
+public class ReleasePokemon extends Task implements Runnable {
 
     ReleasePokemon(final Context context) {
         super(context);

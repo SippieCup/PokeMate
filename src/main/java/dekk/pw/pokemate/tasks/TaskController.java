@@ -5,7 +5,11 @@ import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.Config;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by TimD on 7/21/2016.
@@ -34,26 +38,29 @@ public class TaskController extends Thread {
             tasks.add(new IncubateEgg(context));
         }
 
-        if(Config.isEggsHatching()) {
+        if (Config.isEggsHatching()) {
             tasks.add(new HatchEgg(context));
         }
-
         if (Config.isDropItems()) {
             tasks.add(new DropItems(context));
         }
+
     }
 
     /**
      * This will execute all Tasks, then proceed to wait up to 5 seconds has passed.
      */
     public void run() {
-        try {
-            while (true) {
-                tasks.forEach(Task::run);
-                TimeUnit.SECONDS.sleep(5);
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        while (true) {
+            for (Task nextTask : tasks) {
+                try {
+                    executor.submit(nextTask);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            // Wait 5 seconds before calling more threads
         }
     }
 }

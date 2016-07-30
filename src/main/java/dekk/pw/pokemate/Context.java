@@ -27,6 +27,7 @@ import java.security.MessageDigest;
  */
 public class Context {
     private OkHttpClient http;
+    private int RetryLimit;
     private PokemonGo api;
     private AtomicDouble lat = new AtomicDouble();
     private AtomicDouble lng = new AtomicDouble();
@@ -42,6 +43,7 @@ public class Context {
         this.walking.set(walking);
         this.credentialProvider = credentialProvider;
         this.http = http;
+        this.RetryLimit=5;
 
     }
 
@@ -149,6 +151,10 @@ public class Context {
 
     public AtomicBoolean getWalking() {
         return walking;
+    }
+
+    public int getRetryLimit() {
+        return RetryLimit;
     }
 
     public CredentialProvider getCredentialProvider() {

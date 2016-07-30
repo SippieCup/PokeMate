@@ -14,7 +14,7 @@ import static POGOProtos.Inventory.Item.ItemIdOuterClass.ItemId;
 /**
  * Created by TimD on 7/22/2016.
  */
-public class DropItems extends Task {
+public class DropItems extends Task implements Runnable {
 
     DropItems(final Context context) {
         super(context);
@@ -22,6 +22,7 @@ public class DropItems extends Task {
 
     @Override
     public void run() {
+        Time.sleepRate();
         Config.getDroppedItems().stream().forEach(itemToDrop -> {
             ItemId id = ItemId.valueOf(itemToDrop);
             try {

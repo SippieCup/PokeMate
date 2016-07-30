@@ -58,9 +58,13 @@ public class PokeMate {
 
         auth = Context.Login(http);
         System.out.println("Logged in as " + Config.getUsername());
-        //PokemonGo go = new PokemonGo(auth, http);
-        PokemonGo go = new PokemonGo(auth, http, new SystemTimeImpl());
 
+        PokemonGo go = new PokemonGo(auth, http, new SystemTimeImpl());
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         context = new Context(go, go.getPlayerProfile(), false, auth, http);
         context.setLat(lat);
         context.setLng(lng);

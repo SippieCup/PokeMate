@@ -15,6 +15,7 @@ import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.PokeMateUI;
 import dekk.pw.pokemate.Walking;
 import dekk.pw.pokemate.util.StringConverter;
+import dekk.pw.pokemate.util.Time;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -25,7 +26,7 @@ import static POGOProtos.Networking.Responses.CatchPokemonResponseOuterClass.Cat
 /**
  * Created by TimD on 7/21/2016.
  */
-public class CatchPokemon extends Task {
+public class CatchPokemon extends Task implements Runnable {
 
     CatchPokemon(final Context context) {
         super(context);
@@ -33,6 +34,7 @@ public class CatchPokemon extends Task {
 
     @Override
     public void run() {
+        Time.sleepRate();
         try {
             Pokeball pokeball = null;
             List<CatchablePokemon> pokemon = context.getApi().getMap().getCatchablePokemon().stream()
@@ -94,7 +96,8 @@ public class CatchPokemon extends Task {
                 ex.printStackTrace();
             }
         } catch (LoginFailedException | RemoteServerException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("[] Hit Rate Limited")
         }
     }
 
