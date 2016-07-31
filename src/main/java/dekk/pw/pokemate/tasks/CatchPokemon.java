@@ -15,6 +15,7 @@ import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.PokeMateUI;
 import dekk.pw.pokemate.Walking;
 import dekk.pw.pokemate.util.StringConverter;
+import dekk.pw.pokemate.util.Time;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -34,8 +35,11 @@ public class CatchPokemon extends Task  implements Runnable {
 
     @Override
     public void run() {
-        while(context.getRunStatus()) {
-            System.out.println("[CatchPokemon] Starting Loop");
+
+        while (context.getRunStatus()) {
+            String targetId = null;
+            CatchablePokemon target = null;
+            System.out.println("[CatchPokemon] Attempting Lock");
             try {
                 Pokeball pokeball = null;
                 context.APILock.attempt(1000);
@@ -48,7 +52,6 @@ public class CatchPokemon extends Task  implements Runnable {
                 if (APIElapsedTime < context.getMinimumAPIWaitTime()) {
                     sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
                 }
-
 
                 if (pokemon.size() == 0) {
                     System.out.println("[CatchPokemon] Ending Loop - No Pokemon Found");
@@ -69,64 +72,64 @@ public class CatchPokemon extends Task  implements Runnable {
                     }
                 }
                 APIStartTime = System.currentTimeMillis();
-                CatchablePokemon target = pokemon.get(0);
-                APIElapsedTime = System.currentTimeMillis() - APIStartTime;
-                if (APIElapsedTime < context.getMinimumAPIWaitTime()) {
-                    sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
+                for (CatchablePokemon currentTarget : pokemon) {
+                    if (currentTarget == null) {
+                        continue;
+                    }
+                    APIElapsedTime = System.currentTimeMillis() - APIStartTime;
+                    if (APIElapsedTime < context.getMinimumAPIWaitTime()) {
+                        sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
+                    }
+
+                    targetId = currentTarget.getPokemonId().name();
+
+                    if (currentTarget == null || pokeball == null) {
+                        System.out.println("[CatchPokemon] Ending Loop No Pokemon or No Pokeballs");
+                        continue;
+                    }
+
+                    Walking.setLocation(context);
+                    EncounterResult encounterResult = currentTarget.encounterPokemon();
+                    if (!encounterResult.wasSuccessful()) {
+                        System.out.println("[CatchPokemon] Ending Loop - Caught Pokemon");
+                        continue;
+                    }
+
+                    CatchResult catchResult = currentTarget.catchPokemon(pokeball);
+                    if (catchResult.getStatus() != CATCH_SUCCESS) {
+                        log(target.getPokemonId() + " fled.");
+                        System.out.println("[CatchPokemon] Ending Loop - Pokemon Ran Away");
+                        continue;
+                    }
                 }
 
-                if (target == null || pokeball == null) {
-                    System.out.println("[CatchPokemon] Ending Loop No Pokemon or No Pokeballs");
-                    context.APILock.release();
-                    continue;
-                }
-
-                Walking.setLocation(context);
-                EncounterResult encounterResult = target.encounterPokemon();
-                if (!encounterResult.wasSuccessful()) {
-                    System.out.println("[CatchPokemon] Ending Loop - Caught Pokemon");
-                    context.APILock.release();
-                    continue;
-                }
-
-                CatchResult catchResult = target.catchPokemon(pokeball);
-                if (catchResult.getStatus() != CATCH_SUCCESS) {
-                    log(target.getPokemonId() + " fled.");
-                    System.out.println("[CatchPokemon] Ending Loop - Pokemon Ran Away");
-                    context.APILock.release();
-                    continue;
-                }
-
-                try {
-                    final String targetId = target.getPokemonId().name();
-
-                    pokemons().stream()
-                        .filter(pkmn -> pkmn.getPokemonId().name().equals(targetId))
-                        .sorted((a, b) -> Long.compare(b.getCreationTimeMs(), a.getCreationTimeMs()))
-                        .findFirst()
-                        .ifPresent(p -> {
-                            String output = String.format("Caught a %s [CP: %d] [Candy: %d]", StringConverter.titleCase(targetId), p.getCp(), p.getCandy());
-
-                            if (p.getCp() > Config.getMinimumCPForMessage()) {
-                                PokeMateUI.toast(output, Config.POKE + "mon caught!", "icons/" + target.getPokemonId().getNumber() + ".png");
-                            } else {
-                                log(output + " [IV: " + getIvRatio(p) + "%]");
-                            }
-                        });
-                } catch (NullPointerException ex) {
-                    ex.printStackTrace();
-                }
-            } catch (LoginFailedException | RemoteServerException e) {
-                //e.printStackTrace();
-                System.out.println("[CatchPokemon] Hit Rate Limited");
             } catch (InterruptedException e) {
-                System.out.println("[CatchPokemon] Error - TImed out waiting for API");
-                // e.printStackTrace();
-            }finally {
+                e.printStackTrace();
+            } catch (RemoteServerException e) {
+                e.printStackTrace();
+            } catch (LoginFailedException e) {
+                e.printStackTrace();
+            } finally {
                 context.APILock.release();
+                System.out.println("[CatchPokemon] Released Lock");
+                Time.sleep(500);
             }
-            System.out.println("[CatchPokemon] Ending Loop");
-            context.APILock.release();
+
+            String finalTargetId = targetId;
+            CatchablePokemon finalTarget = target;
+            pokemons().stream()
+                .filter(pkmn -> pkmn.getPokemonId().name().equals(finalTargetId))
+                .sorted((a, b) -> Long.compare(b.getCreationTimeMs(), a.getCreationTimeMs()))
+                .findFirst()
+                .ifPresent(p -> {
+                    String output = String.format("Caught a %s [CP: %d] [Candy: %d]", StringConverter.titleCase(finalTargetId), p.getCp(), p.getCandy());
+
+                    if (p.getCp() > Config.getMinimumCPForMessage()) {
+                        PokeMateUI.toast(output, Config.POKE + "mon caught!", "icons/" + p.getPokemonId().getNumber() + ".png");
+                    } else {
+                        log(output + " [IV: " + getIvRatio(p) + "%]");
+                    }
+                });
         }
     }
 

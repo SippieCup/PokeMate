@@ -7,6 +7,7 @@ import com.pokegoapi.exceptions.RemoteServerException;
 import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.PokeMate;
 import dekk.pw.pokemate.PokeMateUI;
+import dekk.pw.pokemate.util.Time;
 
 import java.text.DecimalFormat;
 
@@ -37,8 +38,10 @@ public class Update extends Task implements Runnable {
     @Override
     public void run() {
         while (context.getRunStatus()) {
+            PlayerProfile player;
             try {
-                PlayerProfile player;
+                System.out.println("[Update] Attempting Lock");
+
                 context.APILock.attempt(1000);
                 APIStartTime = System.currentTimeMillis();
                 context.setProfile(player = context.getApi().getPlayerProfile());
@@ -48,7 +51,6 @@ public class Update extends Task implements Runnable {
                 }
 
                 player.updateProfile();
-
 
                 APIStartTime = System.currentTimeMillis();
                 context.getApi().getInventories().updateInventories(true);
@@ -84,10 +86,12 @@ public class Update extends Task implements Runnable {
             } catch (RemoteServerException e) {
                 System.out.println("[Update] Error - Hit Rate limiter.");
             } catch (InterruptedException e) {
-                System.out.println("[Navigate] Error - Timed out waiting for API");
+                System.out.println("[Update] Error - Timed out waiting for API");
                 // e.printStackTrace();
             }finally   {
                 context.APILock.release();
+                System.out.println("[Update] Releasing Lock");
+                Time.sleep(500);
             }
         }
     }

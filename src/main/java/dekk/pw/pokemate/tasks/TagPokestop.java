@@ -9,6 +9,7 @@ import dekk.pw.pokemate.Config;
 import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.PokeMateUI;
 import dekk.pw.pokemate.Walking;
+import dekk.pw.pokemate.util.Time;
 
 import java.util.ArrayList;
 
@@ -19,8 +20,6 @@ import static dekk.pw.pokemate.util.Time.sleep;
  * Created by TimD on 7/21/2016.
  */
 public class TagPokestop extends Task implements Runnable {
-
-    private MapObjects map;
     
     TagPokestop(final Context context) {
         super(context);
@@ -28,9 +27,10 @@ public class TagPokestop extends Task implements Runnable {
 
     @Override
     public void run() {
+        MapObjects map = null;
         while (context.getRunStatus()) {
+            System.out.println("[Tag Pokestop] Starting Loop");
             try {
-                System.out.println("[Tag Pokestop] Starting Loop");
                 context.APILock.attempt(1000);
                 APIStartTime = System.currentTimeMillis();
                 map = context.getApi().getMap().getMapObjects();
@@ -39,12 +39,12 @@ public class TagPokestop extends Task implements Runnable {
                     sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
                 }
             } catch (RemoteServerException e) {
-                System.out.println("[Tag PokeStop] Ending Loop - Exceeded Rate Limit Finding PokeStops ");
-                continue;
+                System.out.println("[Tag PokeStop] Ending Loop - Exceeded Rate Limit While PokeStops ");
+
             } catch (InterruptedException e) {
                 System.out.println("[Tag PokeStop] Ending Loop - Interrupted");
                 e.printStackTrace();
-                continue;
+
             } catch (LoginFailedException e) {
                 //e.printStackTrace();
                 System.out.println("[Tag PokeStop] Ending Loop - Login Failed");
@@ -57,35 +57,37 @@ public class TagPokestop extends Task implements Runnable {
                 continue;
             }
             System.out.println("[Tag PokeStop] " + pokestops.size() + " Pokestops Found.. Tagging");
-            pokestops.stream()
+
+            try {
+                context.APILock.attempt(1000);
+                pokestops.stream()
                 .filter(Pokestop::canLoot)
                 .forEach(near -> {
                     Walking.setLocation(context);
                     System.out.println("[Tag PokeStop] Tagging PokeStop in range");
                     String result = null;
+                    APIStartTime = System.currentTimeMillis();
                     try {
-                        context.APILock.attempt(1000);
-                        APIStartTime = System.currentTimeMillis();
                         result = resultMessage(near.loot());
-                        APIElapsedTime = System.currentTimeMillis() - APIStartTime;
-                        if (APIElapsedTime < context.getMinimumAPIWaitTime()) {
-                            sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
-                        }
-                        PokeMateUI.toast(result, Config.POKE + "Stop interaction!", "icons/pokestop.png");
                     } catch (LoginFailedException e) {
                         System.out.println("[Tag PokeStop] Ending Loop - Login Failed");
-                        //e.printStackTrace();
                     } catch (RemoteServerException e) {
                         System.out.println("[Tag PokeStop] Exceeded Rate Limit While looting");
-                        //e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        System.out.println("[Tag PokeStop] Ending Loop - Interrupted");
-                        //e.printStackTrace();
-                    } finally {
-                        context.APILock.release();
                     }
+                    APIElapsedTime = System.currentTimeMillis() - APIStartTime;
+                    if (APIElapsedTime < context.getMinimumAPIWaitTime()) {
+                        sleep(context.getMinimumAPIWaitTime() - APIElapsedTime);
+                    }
+                    PokeMateUI.toast(result, Config.POKE + "Stop interaction!", "icons/pokestop.png");
                 });
-            System.out.println("[Tag PokeStop] Ending Loop");
+            } catch (InterruptedException e) {
+                System.out.println("[Tag PokeStop] Ending Loop - Interrupted");
+                //e.printStackTrace();
+            } finally {
+                System.out.println("[Tag PokeStop] Ending Loop");
+                context.APILock.release();
+                Time.sleep(500);
+            }
         }
     }
 

@@ -3,6 +3,7 @@ package dekk.pw.pokemate.tasks;
 import com.google.maps.model.LatLng;
 import dekk.pw.pokemate.Context;
 import dekk.pw.pokemate.Config;
+import dekk.pw.pokemate.util.Time;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -30,9 +31,9 @@ public class TaskController extends Thread {
         executor.submit(new Navigate(context,
             new LatLng(context.getLat().get() - VARIANCE, context.getLng().get() - VARIANCE),
             new LatLng(context.getLat().get() + VARIANCE, context.getLng().get() + VARIANCE)));
-
-
         executor.submit(new Update(context));
+
+        Time.sleep(7500); // Wait for first polling of API (reduces softban occurance)
         executor.submit(new CatchPokemon(context));
         executor.submit(new ReleasePokemon(context));
         executor.submit(new TagPokestop(context));

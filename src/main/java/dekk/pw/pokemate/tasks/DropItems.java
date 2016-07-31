@@ -62,8 +62,10 @@ public class DropItems extends Task implements Runnable {
                 // e.printStackTrace();
             } finally   {
                 context.APILock.release();
+                System.out.println("[DropItems] Ending Loop - Hibernating for 5 minutes");
+                Time.sleep(300000);
             }
-            System.out.println("[DropItems] Ending Loop");
+
         }
     }
 }
